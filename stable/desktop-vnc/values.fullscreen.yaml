@@ -1,0 +1,3 @@
+desktop:
+  vnc_options:
+    resolution: "1920x1080"

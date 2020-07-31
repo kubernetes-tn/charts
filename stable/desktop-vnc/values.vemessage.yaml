@@ -1,0 +1,67 @@
+image:
+  repository: abdennour/ubuntu-desktop #centos-xfce-vnc
+  tag: 1.4.0-devtools-d0f1
+  pullPolicy: Always
+
+desktop:
+  vnc_options:
+    resolution: "1920x1080"
+  extraTools: false
+  persistence:
+    enabled: true
+    size: 5Gi
+    # storageClass: ReadWriteOnce
+    accessMode: ReadWriteMany
+    mountPath: /headless
+    annotations:
+      volume.beta.kubernetes.io/storage-class: "aws-efs"
+  persistenceShared:
+    enabled: true
+    mountPath: /mnt/shared
+    claimName: internal-desktops-shared # created in infrastrucure/cluster-pligins/pre-charts/internal-desktops/shared-pvc.yaml
+  environment:
+  - name: EXTRA_PATH
+    value: /headless/bin:/mnt/shared/bin
+  # No need AWS env vars since .Values.serviceAccount.annotations['eks.amazonaws.com/role-arn'] exists
+  # - name: AWS_ACCESS_KEY_ID
+  #   value: AKIARJS42R6LJLZ3Y5FN
+  # - name: AWS_SECRET_ACCESS_KEY
+  #   value: checkCommandLine
+  - name: SUDO_FORCE_REMOVE
+    value: "no"
+podDockerEngine:
+  insecureRegistry: container-registry.nexus # --insecure-registry 192.168.0.12:5000
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::089315250070:role/cicd-pipeline-builder
+  clusterAccess:
+    enabled: true
+    rules:
+    - apiGroups: [""]
+      resources: ["pods",  "pods/log", "deployments", "services", "ingress"]
+      verbs: ["get", "watch", "list"]
+    namespaces:
+    - development
+
+networkPolicy:
+  apiServerEndpoints:
+  - 10.0.4.212/32
+  - 10.0.6.52/32
+nodeSelector:
+  kubernetes.io/lifecycle: spot
+
+resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: 2000m
+    memory: 8192Mi
+  requests:
+    cpu: 800m
+    memory: 2048Mi

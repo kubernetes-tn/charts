@@ -1,0 +1,18 @@
+kind: Service
+metadata:
+  name: my-service
+spec:
+  ports:
+  - port: 3268
+    targetPort: 3268
+
+kind: Endpoints
+apiVersion: v1
+metadata:
+  name: my-service
+subsets:
+- addresses:
+  - ip: 172.16.98.6
+  ports:
+  - port: 3268
+    protocol: TCP

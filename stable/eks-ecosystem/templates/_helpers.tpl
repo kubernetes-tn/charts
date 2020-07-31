@@ -61,3 +61,7 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{- define "eks-ecosystem.zones" -}}
+{{- $zones := dict "0" "a" "1" "b" "2" "c" "3" "d" "4" "e" "5" "f" -}}
+{{- end }}

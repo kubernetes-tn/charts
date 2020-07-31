@@ -1,0 +1,29 @@
+# Useful to get rid off:
+## 1. https://github.com/kubernetes/kubernetes/issues/75402
+## 2. https://github.com/kubernetes/autoscaler/issues/1431
+{{- range .Values.zones }}
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: gp2-zone-{{ . }}
+  labels:
+    {{- include "eks-ecosystem.labels" $ | nindent 4 }}
+provisioner: kubernetes.io/aws-ebs
+parameters:
+  type: gp2
+  zone: {{ $.Values.region }}{{ . }}
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: gp2-retained-zone-{{ . }}
+  labels:
+    {{- include "eks-ecosystem.labels" $ | nindent 4 }}
+provisioner: kubernetes.io/aws-ebs
+parameters:
+  type: gp2
+  zone: {{ $.Values.region }}{{ . }}
+reclaimPolicy: Retain
+
+{{- end }}

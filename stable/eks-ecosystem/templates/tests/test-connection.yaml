@@ -10,6 +10,6 @@ spec:
   containers:
     - name: wget
       image: busybox
-      command: ['wget']
-      args: ['{{ include "eks-ecosystem.fullname" . }}:{{ .Values.service.port }}']
+      command: ['echo']
+      args: ['helm release: ', '{{ include "eks-ecosystem.fullname" . }}']
   restartPolicy: Never

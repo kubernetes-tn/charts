@@ -12,7 +12,7 @@ aws s3 cp s3://${CHARTMUSEUM_BUCKET}/index.yaml ${build_dir}/index.prev.yaml \
   --region ${AWS_REGION} \
   --profile ${AWS_PROFILE}
 
-if [ ! -f "${build_dir}/index.prev.yaml "]; then
+if [ ! -f "${build_dir}/index.prev.yaml" ]; then
   echo "ERROR in getting the current helm repo index before publishing the newest ones"
   exit 1;
 fi

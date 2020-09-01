@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "radius-auth-proxy.fullname" . }}-assets
+  labels:
+    {{- include "radius-auth-proxy.labels" . | nindent 4 }}
+data:
+{{- if .Values.assets.loginHtml }}
+  login.html: |-
+    {{ .Values.assets.loginHtml | nindent 4 }}
+{{- end }}
+
+{{- if .Values.assets.httpdConf }}
+  httpd.conf: |-
+    {{ .Values.assets.httpdConf | nindent 4 }}
+{{- end }}

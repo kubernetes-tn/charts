@@ -9,20 +9,20 @@ data:
   RADIUS_SERVER_HOSTNAME: {{ required "A value must be entered for .Values.radiusServer.hostname" .Values.radiusServer.hostname }}
   RADIUS_SERVER_SECRET: {{ required "A value must be entered for .Values.radiusServer.secret" .Values.radiusServer.secret }}
   {{- if .Values.radiusServer.port }}
-  RADIUS_SERVER_PORT: {{ .Values.radiusServer.port }}
+  RADIUS_SERVER_PORT: {{ .Values.radiusServer.port | quote }}
   {{- end }}
   PROXY_URL: {{ required "A value must be entered for .Values.radiusClient.proxiedUrl" .Values.radiusClient.proxiedUrl }}
   {{- if .Values.radiusClient.authTimeout }}
-  RADIUS_AUTH_TIMEOUT: {{ .Values.radiusClient.authTimeout }}
+  RADIUS_AUTH_TIMEOUT: {{ .Values.radiusClient.authTimeout | quote }}
   {{- end }}
   {{- if .Values.radiusClient.authRetries }}
-  RADIUS_AUTH_RETRIES: {{ .Values.radiusClient.authRetries }}
+  RADIUS_AUTH_RETRIES: {{ .Values.radiusClient.authRetries | quote }}
   {{- end }}
   {{- if .Values.radiusClient.cookieValid }}
-  RADIUS_COOKIE_VALID: {{ .Values.radiusClient.cookieValid }}
+  RADIUS_COOKIE_VALID: {{ .Values.radiusClient.cookieValid | quote }}
   {{- end }}
   {{- if .Values.session.maxAge }}
-  SESSION_MAX_AGE: {{ .Values.session.maxAge }}
+  SESSION_MAX_AGE: {{ .Values.session.maxAge | quote }}
   {{- end }}
   {{- if .Values.session.cookieName }}
   SESSION_COOKIE_NAME: {{ .Values.session.cookieName }}

@@ -1,0 +1,10 @@
+# group name
+group: 
+# https://kubernetes.io/docs/reference/kubectl/overview/#resource-types
+resources: ["*"]
+# https://kubernetes.io/docs/reference/kubectl/overview/#operations
+verbs: ["*"]
+
+
+nameOverride: ""
+fullnameOverride: ""

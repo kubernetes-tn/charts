@@ -8,6 +8,10 @@ for dir in ./stable/*/; do
   helm package $dir --destination ${build_dir};
 done
 
+for dir in ./incubator/*/; do 
+  helm package $dir --destination ${build_dir};
+done
+
 aws s3 cp s3://${CHARTMUSEUM_BUCKET}/index.yaml ${build_dir}/index.prev.yaml \
   --region ${AWS_REGION} \
   --profile ${AWS_PROFILE}

@@ -14,6 +14,8 @@ Chart for
 
 **with custom login page**
 
+> Login auth require removing `ingress.annotations[nginx.ingress.kubernetes.io/rewrite-target]` and replacing `ingress.hosts[0].paths` by `["/"]`
+
 Assuming you have the login page file under `./login.html` locally.
 
 ```sh

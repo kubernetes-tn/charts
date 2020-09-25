@@ -1,0 +1,1 @@
+{{ len .Values.variants }} applications has been deployed. 

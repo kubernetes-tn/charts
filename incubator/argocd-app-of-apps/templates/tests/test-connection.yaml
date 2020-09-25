@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "argocd-app-of-apps.fullname" . }}-test-connection"
+  labels:
+    {{- include "argocd-app-of-apps.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test-success
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['echo']
+      args: ['{{ len .Values.variants }} variants of {{ include "argocd-app-of-apps.fullname" . }} per {{ .Values.variantName }}']
+  restartPolicy: Never

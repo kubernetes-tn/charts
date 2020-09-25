@@ -1,0 +1,28 @@
+fullnameOverride: myapp
+
+variantName: environment
+variants:
+- dev
+- prod
+subApps:
+- annotations:
+    message: hello
+  spec:
+    destination:
+      namespace: argocd
+      server: https://cluster1.example.com
+    project: default
+    source:
+      path: guestbook
+      repoURL: https://github.com/argoproj/argocd-example-apps
+      targetRevision: HEAD
+- annotations: {}
+  spec:
+    destination:
+      namespace: argocd
+      server: https://cluster2.example.com
+    project: default
+    source:
+      path: guestbook
+      repoURL: https://github.com/argoproj/argocd-example-apps
+      targetRevision: HEAD

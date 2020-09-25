@@ -1,0 +1,42 @@
+## App Of Apps Pattern
+### https://argoproj.github.io/argo-cd/operator-manual/cluster-bootstrapping/#app-of-apps-pattern
+
+nameOverride: ""
+fullnameOverride: ""
+argocd:
+  apiVersion: ""
+
+## according to which variant you want to have subapps ?
+variantName: subapp
+
+## List values of this variant.
+variants: []
+# - dev
+# - prod
+
+## This list will be reflected as list 
+## of resource of kind "Application".
+## the list must have the same size as variants list size. 
+## items in the same order of variant's items.
+## each item presents an ArgoCD app (spec, lables, annotations)
+subApps: []
+# - annotations: {}
+#   spec:
+#     destination:
+#       namespace: argocd
+#       server: https://cluster1.example.com
+#     project: default
+#     source:
+#       path: guestbook
+#       repoURL: https://github.com/argoproj/argocd-example-apps
+#       targetRevision: HEAD
+# - annotations: {}
+#   spec:
+#     destination:
+#       namespace: argocd
+#       server: https://cluster2.example.com
+#     project: default
+#     source:
+#       path: guestbook
+#       repoURL: https://github.com/argoproj/argocd-example-apps
+#       targetRevision: HEAD

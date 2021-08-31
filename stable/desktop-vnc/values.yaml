@@ -95,7 +95,7 @@ desktop:
         ##   - myRegistryKeySecretName
         ##
         pullSecrets: []
-      binary: /usr/local/bin/kubectl
+      binary: /opt/bitnami/kubectl/bin/kubectl
     helm:
       enabled: false
       image:
@@ -134,7 +134,7 @@ desktop:
         ##   - myRegistryKeySecretName
         ##
         pullSecrets: []
-      binary: /usr/bin/git
+      binary: /opt/bitnami/git/bin/git
     kind:
       enabled: false
       image:

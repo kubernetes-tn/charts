@@ -62,6 +62,9 @@ spec:
           volumeMounts:
           - name: bin
             mountPath: /shared-bin
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsUser: 0
       {{- end }}
       {{- if .Values.desktop.extraTools.helm.enabled }}
         - name: tools-helm
@@ -89,6 +92,9 @@ spec:
           volumeMounts:
           - name: bin
             mountPath: /shared-bin
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsUser: 0
       {{- end }}
       {{- if .Values.desktop.extraTools.kind.enabled }}
         - name: tools-kubernetes-in-docker

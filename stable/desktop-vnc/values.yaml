@@ -1,58 +1,216 @@
 # Default values for desktop-vnc.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
-
-replicaCount: 1
-
+global:
+  imageRegistry: ""
+  ## E.g.
+  ## imagePullSecrets:
+  ##   - myRegistryKeySecretName
+  ##
+  imagePullSecrets: []
 image:
+  registry: docker.io
   repository: abdennour/ubuntu-desktop #centos-xfce-vnc
   tag: 1.4.0-devtools-d0f1
   pullPolicy: IfNotPresent # Always
+  ## e.g:
+  ## pullSecrets:
+  ##   - myRegistryKeySecretName
+  ##
+  pullSecrets: []
 
-imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
 desktop:
   uid: 1000
+  sudo: false
   persistence:
-    enabled: true
-    # size: 8Gi
-    # # storageClass: ReadWriteOnce
-    # accessMode: ReadWriteOnce
-    # mountPath: /headless/Downloads
-    # annotations: {}
+    enabled: false
+    mountPath: /headless
+    resourcePolicy: 'keep'
+    ## If you want to reuse an existing claim, you can pass the name of the PVC using
+    ## the existingClaim variable
+    ##
+    existingClaim: ''
+    ## Specify the "storageClass" used to provision the volume.
+    ## Set it to "-" to disable dynamic provisioning
+    ##
+    storageClass: ''
+    subPath: ''
+    accessMode: ReadWriteOnce
+    size: 2Gi
+  #####  .Values.desktop.persistenceShared
+  ## Useful for sharing existing PVC among many desktops
   persistenceShared:
     enabled: false
-    # mountPath: /mnt/shared
-    # claimName: internal-desktops-shared
-  vnc_options:
-    color_depth: "24" # VNC_COL_DEPTH
-    resolution: "1280x1024" # VNC_RESOLUTION
-    # password # VNC_PW default to "vncpassword"
-    # view-only: false # VNC_VIEW_ONLY
+    existingClaim: ''
+    mountPath: /mnt/shared
+  vncOptions:
+    colorDepth: "24" # VNC_COL_DEPTH
+    ### Screen Resolution .Values.desktop.vncOptions.resolution ###
+    ## by default it is full screen (1920x1080)
+    ## use other resolutions if you want like: "1280x1024"
+    resolution: "1920x1080"
+    password: vncpassword # VNC_PW default to "vncpassword"
+    viewOnly: false # VNC_VIEW_ONLY
   extraTools:
-    docker: 19.03
-    kubectl: 1.17.2
-    helm: 3.0.2
-    aws: 1.17.9
-    git: 2.24.1
-    kind: v0.7.0
-  environment: []
+    mountPath: /headless/bin
+    docker:
+      enabled: false
+      image:
+        registry: docker.io
+        repository: docker
+        tag: "20.10"
+        pullPolicy: IfNotPresent # Always
+        ## e.g:
+        ## pullSecrets:
+        ##   - myRegistryKeySecretName
+        ##
+        pullSecrets: []
+      binary: /usr/local/bin/docker
+    dockerCompose:
+      enabled: false
+      image:
+        registry: docker.io
+        repository: docker/compose
+        tag: "debian-1.29.2"
+        pullPolicy: IfNotPresent # Always
+        ## e.g:
+        ## pullSecrets:
+        ##   - myRegistryKeySecretName
+        ##
+        pullSecrets: []
+      binary: /usr/local/bin/docker-compose
+      source: 
+    kubectl:
+      enabled: false
+      image:
+        registry: docker.io
+        repository: bitnami/kubectl
+        tag: 1.20-debian-10
+        pullPolicy: IfNotPresent # Always
+        ## e.g:
+        ## pullSecrets:
+        ##   - myRegistryKeySecretName
+        ##
+        pullSecrets: []
+      binary: /usr/local/bin/kubectl
+    helm:
+      enabled: false
+      image:
+        registry: docker.io
+        repository: alpine/helm
+        tag: 3.6.3
+        pullPolicy: IfNotPresent # Always
+        ## e.g:
+        ## pullSecrets:
+        ##   - myRegistryKeySecretName
+        ##
+        pullSecrets: []
+      binary: /usr/bin/helm
+    aws:
+      enabled: false
+      image:
+        registry: docker.io
+        repository: amazon/aws-cli
+        tag: 2.2.31
+        pullPolicy: IfNotPresent # Always
+        ## e.g:
+        ## pullSecrets:
+        ##   - myRegistryKeySecretName
+        ##
+        pullSecrets: []
+      binary: /usr/bin/aws
+    git:
+      enabled: false
+      image:
+        registry: docker.io
+        repository: bitnami/git
+        tag: 2.33.0-debian-10-r3
+        pullPolicy: IfNotPresent # Always
+        ## e.g:
+        ## pullSecrets:
+        ##   - myRegistryKeySecretName
+        ##
+        pullSecrets: []
+      binary: /usr/bin/git
+    kind:
+      enabled: false
+      image:
+        registry: docker.io
+        repository: abdennour/kind-cli
+        tag: v0.10.0
+        pullPolicy: IfNotPresent # Always
+        ## e.g:
+        ## pullSecrets:
+        ##   - myRegistryKeySecretName
+        ##
+        pullSecrets: []
+      binary: /usr/local/bin/kind
 
 podDisruptionBudget:
   minAvailable: 1
-nodeDockerEngine:
+### .Values.nodeDockerDaemon
+## Risky.. use .Values.podDockerDaemon instead
+nodeDockerDaemon:
   enabled: false
   dockerGroupIdOnNode: 994 #  docker gui in Amazon ec2 eks node
-podDockerEngine:
-  enabled: true
-  version: 19.03
+# This is docker damon
+### .Values.podDockerDaemon
+## Run docker-deamon accessible by the desktop
+podDockerDaemon:
+  enabled: false
+  insecureRegistry: 
+  image:
+    registry: docker.io
+    repository: docker
+    tag: 20.10-dind
+    pullPolicy: IfNotPresent # Always
+    ## e.g:
+    ## pullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    pullSecrets: []
+  persistence:
+    enabled: false
+    resourcePolicy: 'keep'
+    ## If you want to reuse an existing claim, you can pass the name of the PVC using
+    ## the existingClaim variable
+    ##
+    existingClaim: ''
+    ## Specify the "storageClass" used to provision the volume.
+    ## Set it to "-" to disable dynamic provisioning
+    ##
+    storageClass: ''
+    subPath: ''
+    accessMode: ReadWriteOnce
+    size: 2Gi
+  ### .Values.podDockerDaemon.resources ###
+  ## We usually recommend not to specify default resources and to leave this as a conscious
+  ## choice for the user. This also increases chances charts run on environments with little
+  ## resources, such as Minikube. If you do want to specify resources, uncomment the following
+  ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   resources: {}
+    # limits:
+    #   cpu: 500m
+    #   memory: 2048Mi
     # requests:
-    #   cpu: 20m
-    #   memory: 512Mi
+    #   cpu: 300m
+    #   memory: 1024Mi
+busybox:
+  image:
+    registry: docker.io
+    repository: busybox
+    tag: latest
+    pullPolicy: IfNotPresent # Always
+    ## e.g:
+    ## pullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    pullSecrets: []
 serviceAccount:
+  create: true
   annotations: {}
   clusterAccess:
     enabled: true
@@ -81,22 +239,51 @@ ingress:
 internetAccess:
   enabled: false
 networkPolicy:
-  enaled: true
-  allowedNamespacesLabels:
-    category: devtools
+  enaled: false
+  allowedNamespacesLabels: {}
+    # category: devtools
   apiServerEndpoints: [] # k -n default get ep kubernetes
-resources:
+### Main Desktop resources (.Values.resources) ###
+resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
   # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  limits:
-    cpu: 2000m
-    memory: 8192Mi
-  requests:
-    cpu: 1000m
-    memory: 4096Mi
+  # limits:
+  #   cpu: 1000m
+  #   memory: 4096Mi
+  # requests:
+  #   cpu: 1000m
+  #   memory: 4096Mi
 
+### .Values.extraEnvVars ###
+## example:
+# extraEnvVars:
+#   MAVEN_HOME: /headless/.m2
+#   MESSAGE: hello
+extraEnvVars: {}
+### additional volumeMounts
+## it's List / Array
+extraVolumeMounts:
+  # - name: data-env
+  #   mountPath: /usr/share/nginx/html/config
+### additional volumes
+## it's list / Array
+extraVolumes:
+  # - name: data-env
+  #   emptyDir: {}
+extraInitContainers:
+  # - name: env-generator
+  #   image: abdennour/dotenv-to-js-object:4ea
+  #   args:
+  #     - --dest=/data
+  #     - --env-vars-filter=REACT_APP_
+  #     - --run-as=job
+  #   volumeMounts:
+  #     - name: data-env
+  #       mountPath: /data
+  #   envFrom:
+  #     - secretRef:
 nodeSelector: {}
 
 tolerations: []

@@ -2,4 +2,4 @@ apiVersion: v1
 appVersion: "1.4.0"
 description: Simulate a VM with Desktop and Run it in Pod
 name: desktop-vnc
-version: 0.5.0
+version: 1.0.0

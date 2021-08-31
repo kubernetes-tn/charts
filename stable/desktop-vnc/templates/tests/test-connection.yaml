@@ -7,9 +7,10 @@ metadata:
   annotations:
     "helm.sh/hook": test-success
 spec:
+  {{- include "desktop-vnc.imagePullSecrets" . | nindent 2 }}
   containers:
     - name: wget
-      image: busybox
+      image: {{ include "desktop-vnc.busyboxImage" . }}
       command: ['wget']
       args:  ['{{ include "desktop-vnc.fullname" . }}:{{ .Values.service.port }}']
   restartPolicy: Never

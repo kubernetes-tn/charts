@@ -1,0 +1,21 @@
+{{- if .Values.podDockerDaemon.persistence.enabled }}
+{{- if and (not .Values.podDockerDaemon.persistence.existingClaim) (eq .Values.podDockerDaemon.persistence.imageChartStorage.type "filesystem") }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ include "desktop-vnc.fullname" . }}-pod-docker-daemon
+  labels:
+{{ include "desktop-vnc.labels" . | indent 4 }}
+  {{- if eq .Values.podDockerDaemon.persistence.resourcePolicy "keep" }}
+  annotations:
+    helm.sh/resource-policy: keep
+  {{- end }}
+spec:
+  accessModes:
+    - {{ .Values.podDockerDaemon.persistence.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.podDockerDaemon.persistence.size }}
+  {{- include "harbor.registry.storageClass" . | nindent 2 }}
+{{- end }}
+{{- end }}

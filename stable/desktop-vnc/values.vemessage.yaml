@@ -4,7 +4,7 @@ image:
   pullPolicy: Always
 
 desktop:
-  vnc_options:
+  vncOptions:
     resolution: "1920x1080"
   extraTools: false
   persistence:
@@ -29,7 +29,7 @@ desktop:
   #   value: checkCommandLine
   - name: SUDO_FORCE_REMOVE
     value: "no"
-podDockerEngine:
+podDockerDaemon:
   insecureRegistry: container-registry.nexus # --insecure-registry 192.168.0.12:5000
   resources:
     requests:

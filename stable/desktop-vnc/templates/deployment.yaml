@@ -6,7 +6,7 @@ metadata:
   labels:
 {{ include "desktop-vnc.labels" . | indent 4 }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "desktop-vnc.name" . }}
@@ -17,63 +17,100 @@ spec:
         app.kubernetes.io/name: {{ include "desktop-vnc.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      {{- include "desktop-vnc.imagePullSecrets" . | nindent 6 }}
       serviceAccount: {{ include "desktop-vnc.fullname" . }}
       serviceAccountName: {{ include "desktop-vnc.fullname" . }}
-    {{- if .Values.nodeDockerEngine.enabled }}
+    {{- if .Values.nodeDockerDaemon.enabled }}
       securityContext:
-        fsGroup: {{ .Values.nodeDockerEngine.dockerGroupIdOnNode }} # Run the following cmd on k8s node $# cut -d: -f3 < <(getent group docker)
+        fsGroup: {{ .Values.nodeDockerDaemon.dockerGroupIdOnNode }} # Run the following cmd on k8s node $# cut -d: -f3 < <(getent group docker)
     {{- end }}
-    {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-    {{- end }}
-    {{- if .Values.desktop.persistence.enabled }}
       initContainers:
+{{- if .Values.extraInitContainers }}
+{{ tpl (toYaml .Values.extraInitContainers) . | indent 8 }}
+{{- end }}
+      {{- if .Values.desktop.persistence.enabled }}
         - name: volume-prewarming
-          image: busybox
+          image: {{ include "desktop-vnc.busyboxImage" . }}
           command: ["sh", "-c", "chown -R 1000:0 {{ .Values.desktop.persistence.mountPath }}"]
           volumeMounts:
           - name: {{ .Chart.Name }}
             mountPath: {{ .Values.desktop.persistence.mountPath }}
-      {{- if .Values.desktop.extraTools }}
+      {{- end }}
+      {{- if .Values.desktop.extraTools.docker.enabled }}
         - name: tools-docker
-          image: abdennour/docker:{{ .Values.desktop.extraTools.docker }}-dind
-          command: ["/bin/bash"]
-          args: ["-c", "mv /usr/local/bin/docker /shared-bin/ && chmod a+x /shared-bin/* && chown {{ .Values.desktop.uid }}:0 -R /shared-bin/"]
-          volumeMounts:
-          - name: bin
-            mountPath: /shared-bin
-        - name: tools-kubectl-aws-helm
-          image: abdennour/kubectl:v1.17.2-aws1.17.9-helm-3.0.2
-          command: ["/bin/bash"]
-          args: ["-c", "mv /usr/local/bin/kubectl /usr/bin/aws /usr/bin/helm /shared-bin/ && chmod a+x /shared-bin/* && chown {{ .Values.desktop.uid }}:0 -R /shared-bin/"]
-          volumeMounts:
-          - name: bin
-            mountPath: /shared-bin
-        - name: tools-git
-          image: abdennour/git:2.24.1
+          image: {{ include "desktop-vnc.extraToolsDockerImage" . }}
           command: ["/bin/sh"]
-          args: ["-c", "mv /usr/bin/git /shared-bin/ && chmod a+x /shared-bin/* && chown {{ .Values.desktop.uid }}:0 -R /shared-bin/"]
-          volumeMounts:
-          - name: bin
-            mountPath: /shared-bin
-        - name: tools-kubernetes-in-docker
-          image: abdennour/kind-cli:{{ .Values.desktop.extraTools.kind }}
-          command: ["/bin/sh"]
-          args: ["-c", "mv /usr/local/bin/kind /shared-bin/ && chmod a+x /shared-bin/* && chown {{ .Values.desktop.uid }}:0 -R /shared-bin/"]
+          args: ["-c", "mv {{ .Values.desktop.extraTools.docker.binary }} /shared-bin/ && chmod a+x /shared-bin/* && chown {{ .Values.desktop.uid }}:0 -R /shared-bin/"]
           volumeMounts:
           - name: bin
             mountPath: /shared-bin
       {{- end }}
-
-    {{- end }}
+      {{- if .Values.desktop.extraTools.dockerCompose.enabled }}
+        - name: tools-docker-compose
+          image: {{ include "desktop-vnc.extraToolsDockerComposeImage" . }}
+          command: ["/bin/sh"]
+          args: ["-c", "mv {{ .Values.desktop.extraTools.dockerCompose.binary }} /shared-bin/ && chmod a+x /shared-bin/* && chown {{ .Values.desktop.uid }}:0 -R /shared-bin/"]
+          volumeMounts:
+          - name: bin
+            mountPath: /shared-bin
+      {{- end }}
+      {{- if .Values.desktop.extraTools.kubectl.enabled }}
+        - name: tools-kubectl
+          image: {{ include "desktop-vnc.extraToolsKubectlImage" . }}
+          command: ["/bin/sh"]
+          args: ["-c", "mv {{ .Values.desktop.extraTools.kubectl.binary }} /shared-bin/ && chmod a+x /shared-bin/* && chown {{ .Values.desktop.uid }}:0 -R /shared-bin/"]
+          volumeMounts:
+          - name: bin
+            mountPath: /shared-bin
+      {{- end }}
+      {{- if .Values.desktop.extraTools.helm.enabled }}
+        - name: tools-helm
+          image: {{ include "desktop-vnc.extraToolsHelmImage" . }}
+          command: ["/bin/sh"]
+          args: ["-c", "mv {{ .Values.desktop.extraTools.helm.binary }} /shared-bin/ && chmod a+x /shared-bin/* && chown {{ .Values.desktop.uid }}:0 -R /shared-bin/"]
+          volumeMounts:
+          - name: bin
+            mountPath: /shared-bin
+      {{- end }}
+      {{- if .Values.desktop.extraTools.aws.enabled }}
+        - name: tools-aws
+          image: {{ include "desktop-vnc.extraToolsAwsImage" . }}
+          command: ["/bin/sh"]
+          args: ["-c", "mv {{ .Values.desktop.extraTools.aws.binary }} /shared-bin/ && chmod a+x /shared-bin/* && chown {{ .Values.desktop.uid }}:0 -R /shared-bin/"]
+          volumeMounts:
+          - name: bin
+            mountPath: /shared-bin
+      {{- end }}
+      {{- if .Values.desktop.extraTools.git.enabled }}
+        - name: tools-git
+          image: {{ include "desktop-vnc.extraToolsGitImage" . }}
+          command: ["/bin/sh"]
+          args: ["-c", "mv {{ .Values.desktop.extraTools.git.binary }} /shared-bin/ && chmod a+x /shared-bin/* && chown {{ .Values.desktop.uid }}:0 -R /shared-bin/"]
+          volumeMounts:
+          - name: bin
+            mountPath: /shared-bin
+      {{- end }}
+      {{- if .Values.desktop.extraTools.kind.enabled }}
+        - name: tools-kubernetes-in-docker
+          image: {{ include "desktop-vnc.extraToolsKindImage" . }}
+          command: ["/bin/sh"]
+          args: ["-c", "mv {{ .Values.desktop.extraTools.kind.binary }} /shared-bin/ && chmod a+x /shared-bin/* && chown {{ .Values.desktop.uid }}:0 -R /shared-bin/"]
+          volumeMounts:
+          - name: bin
+            mountPath: /shared-bin
+      {{- end }}
+    ## use fsGroup=65534 when When eks.amazonaws.com/role-arn exists in .Values.serviceAccount.annotations
+    {{- if .Values.serviceAccount.create }}
+    {{- $annotationEKSRoleArn := (get .Values.serviceAccount.annotations "eks.amazonaws.com/role-arn" ) -}}
+    {{- if $annotationEKSRoleArn }}
       securityContext:
-         # TODO add condition to  use fsGroup when When eks.amazonaws.com/role-arn exists in .Values.serviceAccount.annotations
         fsGroup: 65534
+    {{- end }}
+    {{- end }}
       containers:
 ####### Here the definition of the main container ##########
         - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: {{ include "desktop-vnc.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
@@ -90,31 +127,17 @@ spec:
               path: /
               port: http
               scheme: HTTP
-          env:
-            - name: VNC_RESOLUTION
-              value: {{ .Values.desktop.vnc_options.resolution }}
-            - name: VNC_COL_DEPTH
-              value: {{ .Values.desktop.vnc_options.color_depth | quote }}
-          {{- with .Values.desktop.environment }}
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- if .Values.nodeDockerEngine.enabled }}
-            - name: DOCKER_GID_ON_HOST
-              value: {{ .Values.nodeDockerEngine.dockerGroupIdOnNode | quote }}
-          {{- end }}
-          {{- if .Values.podDockerEngine.enabled }}
-            - name: DOCKER_HOST
-              value: tcp://localhost:2376
-            - name: DOCKER_TLS_VERIFY
-              value: "1"
-            - name: DOCKER_TLS_CERTDIR
-              value: /certs
-            - name: DOCKER_CERT_PATH
-              value: /certs/client
-          {{- end }}
+          envFrom:
+          - configMapRef:
+              name: {{ include "desktop-vnc.fullname" . }}-env-vars
+          - secretRef:
+              name: {{ include "desktop-vnc.fullname" $ }}-env-vars
           volumeMounts:
           - mountPath: /dev/shm
             name: dshm
+{{- if .Values.extraVolumeMounts }}
+{{ tpl (toYaml .Values.extraVolumeMounts | indent 10) . }}
+{{- end }}
         {{- if .Values.desktop.persistence.enabled }}
           - mountPath: {{ .Values.desktop.persistence.mountPath }}
             name: {{ .Chart.Name }}
@@ -123,33 +146,33 @@ spec:
           - mountPath: {{ .Values.desktop.persistenceShared.mountPath }}
             name: {{ .Chart.Name }}-shared
         {{- end }}
-        {{- if .Values.desktop.extraTools }}
-          - mountPath: /headless/bin
+        {{- if (or .Values.desktop.extraTools.docker.enabled .Values.desktop.extraTools.kubectl.enabled .Values.desktop.extraTools.helm.enabled .Values.desktop.extraTools.aws.enabled .Values.desktop.extraTools.git.enabled .Values.desktop.extraTools.kind.enabled) }}
+          - mountPath: {{ .Values.desktop.extraTools.mountPath }}
             name: bin
         {{- end }}
-        {{- if .Values.nodeDockerEngine.enabled }}
+        {{- if .Values.nodeDockerDaemon.enabled }}
           - name: dockersock
             readOnly: true
             mountPath: /var/run/docker.sock
         {{- end }}
-        {{- if .Values.podDockerEngine.enabled }}
+        {{- if .Values.podDockerDaemon.enabled }}
           - name: docker-certs
             mountPath: /certs
         {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
 
-      {{- if .Values.podDockerEngine.enabled }}
+      {{- if .Values.podDockerDaemon.enabled }}
 #### Definition of container behaves like docker engine inside Pod###
         - name: dind-daemon
-          image: abdennour/docker:{{ .Values.podDockerEngine.version }}-dind
-        {{- if .Values.podDockerEngine.insecureRegistry }}
+          image: {{ include "desktop-vnc.podDockerDaemonImage" . }}
+        {{- if .Values.podDockerDaemon.insecureRegistry }}
           args:
           - --insecure-registry
-          - {{ .Values.podDockerEngine.insecureRegistry }}
+          - {{ .Values.podDockerDaemon.insecureRegistry }}
         {{- end }}
           resources:
-            {{- toYaml .Values.podDockerEngine.resources | nindent 12 }}
+            {{- toYaml .Values.podDockerDaemon.resources | nindent 12 }}
           securityContext:
               privileged: true
           volumeMounts:
@@ -170,43 +193,51 @@ spec:
       {{- end }}
 
       volumes:
-      # https://stackoverflow.com/a/46434614/747579
-      - name: dshm
-        emptyDir:
-          medium: Memory
-      {{- if .Values.desktop.persistence.enabled }}
-      - name: {{ .Chart.Name }}
-        persistentVolumeClaim:
-          claimName: {{ include "desktop-vnc.fullname" . }}
-      {{- end }}
-      {{- if .Values.desktop.persistenceShared.enabled }}
-      - name: {{ .Chart.Name }}-shared
-        persistentVolumeClaim:
-          claimName: {{ .Values.desktop.persistenceShared.claimName }}
-      {{- end }}
-      {{- if .Values.podDockerEngine.enabled }}
-      - name: modules
-        hostPath:
-          path: /lib/modules
-          type: Directory
-      - name: cgroup
-        hostPath:
-          path: /sys/fs/cgroup
-          type: Directory
-      - name: docker-graph-storage
-        emptyDir: {}
-      - name: docker-certs
-        emptyDir: {}
-      {{- end }}
-      {{- if .Values.desktop.extraTools }}
-      - name: bin
-        emptyDir: {}
-      {{- end }}
-      {{- if .Values.nodeDockerEngine.enabled }}
-      - name: dockersock
-        hostPath:
-          path: /var/run/docker.sock
-      {{- end }}
+        # https://stackoverflow.com/a/46434614/747579
+        - name: dshm
+          emptyDir:
+            medium: Memory
+        {{- if .Values.desktop.persistence.enabled }}
+        - name: {{ .Chart.Name }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.desktop.persistence.existingClaim | default (include "desktop-vnc.fullname" .) }}
+        {{- end }}
+        {{- if .Values.desktop.persistenceShared.enabled }}
+        - name: {{ .Chart.Name }}-shared
+          persistentVolumeClaim:
+            claimName: {{ .Values.desktop.persistenceShared.existingClaim }}
+        {{- end }}
+        {{- if .Values.podDockerDaemon.enabled }}
+        - name: modules
+          hostPath:
+            path: /lib/modules
+            type: Directory
+        - name: cgroup
+          hostPath:
+            path: /sys/fs/cgroup
+            type: Directory
+        - name: docker-graph-storage
+        {{- if .Values.podDockerDaemon.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.podDockerDaemon.persistence.existingClaim | default (printf "%s-pod-docker-daemon"  (include "desktop-vnc.fullname" .) ) }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
+        - name: docker-certs
+          emptyDir: {}
+        {{- end }}
+        {{- if (or .Values.desktop.extraTools.docker.enabled .Values.desktop.extraTools.kubectl.enabled .Values.desktop.extraTools.helm.enabled .Values.desktop.extraTools.aws.enabled .Values.desktop.extraTools.git.enabled .Values.desktop.extraTools.kind.enabled) }}
+        - name: bin
+          emptyDir: {}
+        {{- end }}
+        {{- if .Values.nodeDockerDaemon.enabled }}
+        - name: dockersock
+          hostPath:
+            path: /var/run/docker.sock
+        {{- end }}
+{{- if .Values.extraVolumes }}
+{{ tpl (toYaml .Values.extraVolumes | indent 8) . }}
+{{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

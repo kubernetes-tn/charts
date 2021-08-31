@@ -12,5 +12,5 @@ spec:
     - name: wget
       image: {{ include "desktop-vnc.busyboxImage" . }}
       command: ['wget']
-      args:  ['{{ include "desktop-vnc.fullname" . }}:{{ .Values.service.port }}']
+      args:  ['{{ include "desktop-vnc.fullname" . }}:{{ .Values.service.ports.http }}']
   restartPolicy: Never

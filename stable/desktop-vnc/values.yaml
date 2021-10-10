@@ -21,7 +21,16 @@ image:
 
 nameOverride: ""
 fullnameOverride: ""
-
+## .Values.lifecycle
+## pod container lifecycle (postStart or/and preStop)
+# lifecycle:
+#   postStart:
+#     exec:
+#       command:
+#       - sh
+#       - -c
+#       - cp /shared-bin/docker /usr/bin/docker
+lifecycle: {}
 desktop:
   uid: 1000
   sudo: false

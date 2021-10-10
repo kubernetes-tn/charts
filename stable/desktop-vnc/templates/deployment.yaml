@@ -117,6 +117,10 @@ spec:
 ####### Here the definition of the main container ##########
         - name: {{ .Chart.Name }}
           image: {{ include "desktop-vnc.image" . }}
+          {{- with .Values.lifecycle }}
+          lifecycle:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
